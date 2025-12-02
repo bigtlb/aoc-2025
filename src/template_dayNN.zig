@@ -41,7 +41,6 @@ test "dayNN part1" {
     try std.testing.expectEqual(@as(i64, 0), result);
 }
 
-test "dayNN part2" {
     const lines = [_][]const u8{
         "example line 1",
         "example line 2",

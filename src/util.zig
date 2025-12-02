@@ -100,6 +100,20 @@ pub fn printColor(color: Color, comptime fmt: []const u8, args: anytype) !void {
     try writer.flush();
 }
 
+/// Convert a multiline string to a slice of lines for testing
+/// Caller owns the returned ArrayList
+pub fn linesToSlice(allocator: std.mem.Allocator, input: []const u8) ![][]const u8 {
+    var lines_list = std.array_list.Managed([]const u8).init(allocator);
+    errdefer lines_list.deinit();
+
+    var it = std.mem.splitScalar(u8, input, '\n');
+    while (it.next()) |line| {
+        try lines_list.append(line);
+    }
+
+    return lines_list.toOwnedSlice();
+}
+
 test "color codes" {
     try std.testing.expectEqualStrings("\x1b[31m", Color.red.code());
     try std.testing.expectEqualStrings("\x1b[0m", Color.reset.code());
