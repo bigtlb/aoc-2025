@@ -30,7 +30,7 @@ fn part1(lines: []const []const u8) !usize {
         const direction = line[0];
         const value = try std.fmt.parseInt(i16, line[1..], 10);
 
-        try util.print("Current dial: {d},\tInstruction: {c}{d},\t", .{ dial_num, direction, value });
+        // try util.print("Current dial: {d},\tInstruction: {c}{d},\t", .{ dial_num, direction, value });
         dial_num = @mod(if (direction == 'L')
             dial_num - value
         else if (direction == 'R')
@@ -41,7 +41,7 @@ fn part1(lines: []const []const u8) !usize {
         if (dial_num == 0) {
             counter += 1;
         }
-        try util.print("New dial: {d}\n", .{dial_num});
+        // try util.print("New dial: {d}\n", .{dial_num});
     }
 
     return counter;
@@ -65,24 +65,16 @@ fn part2(lines: []const []const u8) !usize {
         else
             dial_num;
 
-        var wraps: usize = 0;
-        for (0..@intCast(value)) |_| {
-            dial_num = if (direction == 'L') dial_num - 1 else dial_num + 1;
-            if (dial_num < 0) {
-                dial_num = 99;
-            } else if (dial_num >= 100) {
-                dial_num = 0;
-            }
-            if (dial_num == 0) {
-                wraps += 1;
-            }
-        }
+        // Count how many times we cross 0
+        // Since dial_num is always 0-99, we just need abs of the end block
+        const end_div = @divFloor(new_val, 100);
+        const wraps: usize = @intCast(@abs(end_div));
 
         if (wraps > 0) {
-            counter += @intCast(wraps);
-
-            dial_num = @mod(new_val, 100);
+            counter += wraps;
         }
+
+        dial_num = @mod(new_val, 100);
     }
 
     return counter;
