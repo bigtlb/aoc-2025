@@ -1,0 +1,39 @@
+# Zig build artifacts
+zig-out/
+zig-cache/
+.zig-cache/
+
+# Build system cache
+build/
+.build/
+
+# Compiled binaries
+*.exe
+*.dll
+*.so
+*.dylib
+*.a
+*.lib
+
+# Debug symbols
+*.pdb
+*.dSYM/
+
+# Editor/IDE files
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+.DS_Store
+
+# Advent of Code inputs (personal puzzle inputs should not be committed)
+input/*.txt
+!input/.gitkeep
+
+# Test outputs
+test-results/
+
+# Temporary files
+*.tmp
+*.log
