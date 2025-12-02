@@ -20,7 +20,7 @@ pub fn main() !void {
 }
 
 fn part1(lines: []const []const u8) !usize {
-    try util.print("\n--- Part 1 ---\n", .{});
+    try util.print("\n--- Day 01 Part 1 ---\n", .{});
     var dial_num: i16 = 50;
     var counter: usize = 0;
 
@@ -48,7 +48,7 @@ fn part1(lines: []const []const u8) !usize {
 }
 
 fn part2(lines: []const []const u8) !usize {
-    try util.print("\n--- Part 2 ---\n", .{});
+    try util.print("\n--- Day 01 Part 2 ---\n", .{});
     var dial_num: i32 = 50;
     var counter: usize = 0;
 
@@ -80,46 +80,33 @@ fn part2(lines: []const []const u8) !usize {
     return counter;
 }
 
-test "day01 part1" {
-    const input =
-        \\L68
-        \\L30
-        \\R48
-        \\L5
-        \\R60
-        \\L55
-        \\L1
-        \\L99
-        \\R14
-        \\L82
-    ;
+const input =
+    \\L68
+    \\L30
+    \\R48
+    \\L5
+    \\R60
+    \\L55
+    \\L1
+    \\L99
+    \\R14
+    \\L82
+;
 
+test "day01 part1" {
     const lines_list = try util.linesToSlice(std.testing.allocator, input);
     defer std.testing.allocator.free(lines_list);
 
     const result = try part1(lines_list);
-    try util.printColor(.blue, "Part 1 result: {d}\n", .{result});
+    try util.printColor(.blue, "Day 01 Part 1 result: {d}\n", .{result});
     try std.testing.expectEqual(3, result);
 }
 
 test "day01 part2" {
-    const input =
-        \\L68
-        \\L30
-        \\R48
-        \\L5
-        \\R60
-        \\L55
-        \\L1
-        \\L99
-        \\R14
-        \\L82
-    ;
-
     const lines_list = try util.linesToSlice(std.testing.allocator, input);
     defer std.testing.allocator.free(lines_list);
 
     const result = try part2(lines_list);
-    try util.printColor(.blue, "Part 2 result: {d}\n", .{result});
+    try util.printColor(.blue, "Day 01 Part 2 result: {d}\n", .{result});
     try std.testing.expectEqual(6, result);
 }
