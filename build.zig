@@ -77,6 +77,7 @@ pub fn build(b: *std.Build) void {
         });
 
         const run_day_test = b.addRunArtifact(day_test);
+        run_day_test.setCwd(b.path("."));
         test_step.dependOn(&run_day_test.step);
     } else {
         // Test all days that exist
@@ -96,6 +97,7 @@ pub fn build(b: *std.Build) void {
             });
 
             const run_day_test = b.addRunArtifact(day_test);
+            run_day_test.setCwd(b.path("."));
             test_step.dependOn(&run_day_test.step);
         }
 
@@ -108,6 +110,7 @@ pub fn build(b: *std.Build) void {
             }),
         });
         const run_util_test = b.addRunArtifact(util_test);
+        run_util_test.setCwd(b.path("."));
         test_step.dependOn(&run_util_test.step);
     }
 }
