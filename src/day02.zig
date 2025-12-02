@@ -46,26 +46,60 @@ fn parseRange(allocator: std.mem.Allocator, range_str: []const u8) !std.array_li
 }
 
 fn part1(allocator: std.mem.Allocator, lines: []const []const u8) !u64 {
-    try util.print("\n--- Day 01 Part 1 ---\n", .{});
+    try util.print("\n--- Day 02 Part 1 ---\n", .{});
     var ranges = try parseRange(allocator, lines[0]);
     defer ranges.deinit();
     var total_covered: u64 = 0;
+    var count: usize = 0;
+
+    // Find the maximum value across all ranges to calculate max digits
+    var max_val: u64 = 0;
     for (ranges.items) |r| {
-        try util.print("Range: {d}-{d}\n", .{ r.start, r.end });
-        for (r.start..r.end + 1) |num| {
-            const digits = std.fmt.allocPrint(allocator, "{d}", .{num}) catch continue;
-            defer allocator.free(digits);
-            // If this number is digits repeated twice it counts (e.g., 55, 123123)
-            const len = digits.len;
-            if (len % 2 == 0) {
-                const half = len / 2;
-                if (std.mem.eql(u8, digits[0..half], digits[half..len])) {
-                    try util.print("  Covered number: {d}\n", .{num});
+        if (r.end > max_val) max_val = r.end;
+    }
+
+    // Calculate the number of digits in max_val
+    const max_digits = if (max_val == 0) 1 else blk: {
+        var temp = max_val;
+        var d: u32 = 0;
+        while (temp > 0) : (temp /= 10) {
+            d += 1;
+        }
+        break :blk d;
+    };
+
+    // Round up to nearest even number for repeated-digit patterns
+    const max_even_digits = if (max_digits % 2 == 0) max_digits else max_digits + 1;
+
+    try util.print("Max value: {d}, Max digits: {d}, Checking up to {d}-digit patterns\n", .{ max_val, max_digits, max_even_digits });
+
+    // Generate all repeated-digit numbers once, then check against all ranges
+    var digits: u32 = 2;
+    while (digits <= max_even_digits) : (digits += 2) {
+        const half = digits / 2;
+        const min_half = std.math.pow(u64, 10, half - 1);
+        const max_half = std.math.pow(u64, 10, half) - 1;
+
+        var half_num = min_half;
+        while (half_num <= max_half) : (half_num += 1) {
+            // Create the repeated number (e.g., 123 -> 123123)
+            const num = half_num * std.math.pow(u64, 10, half) + half_num;
+
+            // Early exit if we've exceeded all possible ranges
+            if (num > max_val) break;
+
+            // Check if this number falls in any range
+            for (ranges.items) |r| {
+                if (num >= r.start and num <= r.end) {
+                    count += 1;
                     total_covered += num;
+                    break; // Don't count the same number twice if ranges overlap
                 }
             }
         }
     }
+
+    try util.print("Found {d} matching numbers\n", .{count});
     return total_covered;
 }
 
