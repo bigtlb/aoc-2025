@@ -103,12 +103,57 @@ fn part1(allocator: std.mem.Allocator, lines: []const []const u8) !u64 {
     return total_covered;
 }
 
-fn part2(allocator: std.mem.Allocator, lines: []const []const u8) !i64 {
+fn isRepeatedPattern(num: u64) bool {
+    // Convert number to string to check pattern repetition
+    var buf: [20]u8 = undefined;
+    const digits = std.fmt.bufPrint(&buf, "{d}", .{num}) catch return false;
+    const len = digits.len;
+
+    // Try each possible pattern length (must divide evenly into total length)
+    for (1..len / 2 + 1) |pattern_len| {
+        if (len % pattern_len != 0) continue; // Pattern must divide evenly
+
+        const repetitions = len / pattern_len;
+        if (repetitions < 2) continue; // Need at least 2 repetitions
+
+        // Check if the first pattern repeats throughout
+        const pattern = digits[0..pattern_len];
+        var is_match = true;
+        var i: usize = pattern_len;
+        while (i < len) : (i += pattern_len) {
+            if (!std.mem.eql(u8, pattern, digits[i .. i + pattern_len])) {
+                is_match = false;
+                break;
+            }
+        }
+
+        if (is_match) return true; // Found a repeating pattern
+    }
+
+    return false; // No repeating pattern found
+}
+
+fn part2(allocator: std.mem.Allocator, lines: []const []const u8) !u64 {
+    try util.print("\n--- Day 02 Part 2 ---\n", .{});
     var ranges = try parseRange(allocator, lines[0]);
     defer ranges.deinit();
-    // TODO: Implement part 2 solution
-    return 0;
+    var total_invalid: u64 = 0;
+    var count: usize = 0;
+
+    for (ranges.items) |r| {
+        try util.print("Checking range {d}-{d}\n", .{ r.start, r.end });
+        for (r.start..r.end + 1) |num| {
+            if (isRepeatedPattern(num)) {
+                total_invalid += num;
+                count += 1;
+            }
+        }
+    }
+
+    try util.print("Found {d} invalid numbers (repeating patterns)\n", .{count});
+    return total_invalid;
 }
+
 const input =
     \\11-22,95-115,998-1012,1188511880-1188511890,222220-222224,1698522-1698528,446443-446449,38593856-38593862,565653-565659,824824821-824824827,2121212118-2121212124
 ;
@@ -128,5 +173,5 @@ test "day02 part2" {
 
     const result = try part2(std.testing.allocator, lines_list);
     try util.print("Day 02 Part 2 result: {d}\n", .{result});
-    try std.testing.expectEqual(@as(i64, 0), result);
+    try std.testing.expectEqual(4174379265, result);
 }
