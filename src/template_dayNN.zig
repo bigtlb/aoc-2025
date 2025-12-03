@@ -19,6 +19,12 @@ pub fn main() !void {
     try util.printColor(.green, "Part 2: {d}\n", .{try part2(lines)});
 }
 
+// parses the input file and returns a cleaner format
+fn parseInput(allocator: std.mem.Allocator, lines: [][]const u8) !void {
+    _ = allocator;
+    _ = lines;
+}
+
 fn part1(lines: []const []const u8) !i64 {
     _ = lines;
     // TODO: Implement part 1 solution
@@ -44,19 +50,19 @@ const input =
 ;
 
 test "day02 part1" {
-    const lines_list = try util.linesToSlice(std.testing.allocator, input);
-    defer std.testing.allocator.free(lines_list);
+    const lines = try util.linesToSlice(std.testing.allocator, input);
+    defer std.testing.allocator.free(lines);
 
-    const result = try part1(lines_list);
+    const result = try part1(lines);
     try util.printColor(.blue, "Day 02 Part 1 result: {d}\n", .{result});
     try std.testing.expectEqual(@as(i64, 0), result);
 }
 
 test "day02 part2" {
-    const lines_list = try util.linesToSlice(std.testing.allocator, input);
-    defer std.testing.allocator.free(lines_list);
+    const lines = try util.linesToSlice(std.testing.allocator, input);
+    defer std.testing.allocator.free(lines);
 
-    const result = try part2(lines_list);
+    const result = try part2(lines);
     try util.print("Day 02 Part 2 result: {d}\n", .{result});
     try std.testing.expectEqual(@as(i64, 0), result);
 }
