@@ -3,7 +3,7 @@ const builtin = @import("builtin");
 
 /// Read input file and return lines as an ArrayList of strings
 /// Caller owns the returned ArrayList and all strings within it
-pub fn readInputFile(allocator: std.mem.Allocator, day: u8) ![][]u8 {
+pub fn readInputFile(allocator: std.mem.Allocator, day: u8) ![]const []const u8 {
     var lines = std.array_list.Managed([]u8).init(allocator);
     errdefer {
         for (lines.items) |line| {
