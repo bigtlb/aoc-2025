@@ -16,18 +16,11 @@ pub fn readInputFile(allocator: std.mem.Allocator, day: u8) ![][]u8 {
     var path_buf: [256]u8 = undefined;
     const path = try std.fmt.bufPrint(&path_buf, "input/day{d:0>2}.txt", .{day});
 
-    // Open and read the file
-    const file = std.fs.cwd().openFile(path, .{}) catch |err| {
-        printColor(.red, "Error: Could not open file '{s}': {s}\n", .{ path, @errorName(err) }) catch {};
+    const content = std.fs.cwd().readFileAlloc(path, allocator, .unlimited) catch |err| {
+        try printColor(.red, "Error: Could not read file '{s}': {s}\n", .{ path, @errorName(err) });
         std.process.exit(1);
     };
-    defer file.close();
-
-    const file_size = try file.getEndPos();
-    const content = try allocator.alloc(u8, file_size);
     defer allocator.free(content);
-
-    _ = try file.readAll(content);
 
     // Split into lines
     var it = std.mem.splitScalar(u8, content, '\n');
@@ -46,9 +39,9 @@ pub fn readInputFile(allocator: std.mem.Allocator, day: u8) ![][]u8 {
 // Shared buffer and writer singleton
 var stdout_buf: [4096]u8 = undefined;
 var stdout_file_writer: ?std.fs.File.Writer = null;
-var stdout_writer: ?*std.io.Writer = null;
+var stdout_writer: ?*std.Io.Writer = null;
 
-fn getWriter() *std.io.Writer {
+fn getWriter() *std.Io.Writer {
     if (stdout_writer == null) {
         stdout_file_writer = if (builtin.is_test)
             std.fs.File.stderr().writer(&stdout_buf)
