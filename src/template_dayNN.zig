@@ -25,13 +25,13 @@ fn parseInput(allocator: std.mem.Allocator, lines: [][]const u8) !void {
     _ = lines;
 }
 
-fn part1(lines: []const []const u8) !i64 {
+fn part1(lines: [][]const u8) !u64 {
     _ = lines;
     // TODO: Implement part 1 solution
     return 0;
 }
 
-fn part2(lines: []const []const u8) !i64 {
+fn part2(lines: [][]const u8) !u64 {
     _ = lines;
     // TODO: Implement part 2 solution
     return 0;
@@ -55,7 +55,7 @@ test "day02 part1" {
 
     const result = try part1(lines);
     try util.printColor(.blue, "Day 02 Part 1 result: {d}\n", .{result});
-    try std.testing.expectEqual(@as(i64, 0), result);
+    try std.testing.expectEqual(0, result);
 }
 
 test "day02 part2" {
@@ -64,5 +64,5 @@ test "day02 part2" {
 
     const result = try part2(lines);
     try util.print("Day 02 Part 2 result: {d}\n", .{result});
-    try std.testing.expectEqual(@as(i64, 0), result);
+    try std.testing.expectEqual(0, result);
 }

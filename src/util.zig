@@ -27,10 +27,7 @@ pub fn readInputFile(allocator: std.mem.Allocator, day: u8) ![]const []const u8 
     while (it.next()) |line| {
         // Trim carriage return if present (Windows line endings)
         const trimmed = std.mem.trimRight(u8, line, "\r");
-        if (trimmed.len > 0) {
-            const line_copy = try allocator.dupe(u8, trimmed);
-            try lines.append(line_copy);
-        }
+        try lines.append(try allocator.dupe(u8, trimmed));
     }
 
     return lines.toOwnedSlice();
