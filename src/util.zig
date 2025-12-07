@@ -3,7 +3,7 @@ const builtin = @import("builtin");
 
 /// Read input file and return lines as an ArrayList of strings
 /// Caller owns the returned ArrayList and all strings within it
-pub fn readInputFile(allocator: std.mem.Allocator, day: u8) ![]const []const u8 {
+pub fn readInputFile(allocator: std.mem.Allocator, day: u8) ![][]u8 {
     var lines = std.array_list.Managed([]u8).init(allocator);
     errdefer {
         for (lines.items) |line| {
@@ -92,13 +92,14 @@ pub fn printColor(color: Color, comptime fmt: []const u8, args: anytype) !void {
 
 /// Convert a multiline string to a slice of lines for testing
 /// Caller owns the returned ArrayList
-pub fn linesToSlice(allocator: std.mem.Allocator, input: []const u8) ![][]const u8 {
-    var lines_list = std.array_list.Managed([]const u8).init(allocator);
+pub fn linesToSlice(allocator: std.mem.Allocator, input: []const u8) ![][]u8 {
+    var lines_list = std.array_list.Managed([]u8).init(allocator);
     errdefer lines_list.deinit();
 
     var it = std.mem.splitScalar(u8, input, '\n');
     while (it.next()) |line| {
-        try lines_list.append(line);
+        const line_copy = try allocator.dupe(u8, line);
+        try lines_list.append(line_copy);
     }
 
     return lines_list.toOwnedSlice();

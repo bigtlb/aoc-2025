@@ -97,7 +97,12 @@ const input =
 
 test "day03 part1" {
     const lines = try util.linesToSlice(std.testing.allocator, input);
-    defer std.testing.allocator.free(lines);
+    defer {
+        for (lines) |line| {
+            std.testing.allocator.free(line);
+        }
+        std.testing.allocator.free(lines);
+    }
 
     const result = try part1(lines);
     try util.printColor(.blue, "Day 03 Part 1 result: {d}\n", .{result});
@@ -106,7 +111,12 @@ test "day03 part1" {
 
 test "day03 part2" {
     const lines = try util.linesToSlice(std.testing.allocator, input);
-    defer std.testing.allocator.free(lines);
+    defer {
+        for (lines) |line| {
+            std.testing.allocator.free(line);
+        }
+        std.testing.allocator.free(lines);
+    }
 
     const result = try part2(lines);
     try util.print("Day 03 Part 2 result: {d}\n", .{result});
