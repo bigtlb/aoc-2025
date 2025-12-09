@@ -83,6 +83,10 @@ fn getShortestDistancePairs(allocator: std.mem.Allocator, points: []const Point,
     return allocator.dupe(Pair, all_pairs[0..k_eff]);
 }
 
+fn getDistancesToAllPairs(allocator: std.mem.Allocator, points: []const Point) ![]const Pair {
+    return getShortestDistancePairs(allocator, points, points.len * (points.len - 1) / 2);
+}
+
 fn addPairToCircuit(allocator: std.mem.Allocator, circuits: *std.array_list.Managed(std.AutoHashMap(usize, void)), pair: Pair) !void {
     // Scan the circuits to see// Find which circuit (if any) contains point a
     var a_circuit: ?*std.AutoHashMap(usize, void) = null;
@@ -182,12 +186,53 @@ fn part1(allocator: std.mem.Allocator, lines: [][]u8, n: usize) !usize {
     return counts[0] * counts[1] * counts[2];
 }
 
-fn part2(allocator: std.mem.Allocator, lines: [][]u8) !usize {
+fn part2(allocator: std.mem.Allocator, lines: [][]u8) !i64 {
     try util.print("\n--- Day 08 Part 2 ---\n", .{});
-    _ = allocator;
-    _ = lines;
-    // TODO: Implement part 2 solution
-    return 0;
+    const points = try makePoints(allocator, lines);
+    defer allocator.free(points);
+
+    const shortest_distance_pairs = try getDistancesToAllPairs(allocator, points);
+    defer allocator.free(shortest_distance_pairs);
+
+    // An array of circuits. Each circuits contains points that are in the circuit, referenced by their index in the point array,
+    // which is also how they are reference in the pairs
+    var circuits = std.array_list.Managed(std.AutoHashMap(usize, void)).init(allocator);
+    defer {
+        for (circuits.items) |*circuit| {
+            circuit.deinit();
+        }
+        circuits.deinit();
+    }
+
+    var cur_idx: usize = 0;
+    var last_processed_pair: ?Pair = null;
+    while (circuits.items.len == 0 or circuits.items.len > 1 or (circuits.items.len == 1 and circuits.items[0].count() < points.len)) : (cur_idx += 1) {
+        var cur_pair = shortest_distance_pairs[cur_idx];
+        last_processed_pair = cur_pair;
+        try util.print("Processing pair: a={d}, b={d}, dist={d}\n", .{ cur_pair.a, cur_pair.b, cur_pair.dist });
+        try addPairToCircuit(allocator, &circuits, cur_pair);
+    }
+
+    // Get the count of each circuit hashmap, and then sort that count largest first
+    var counts = try allocator.alloc(usize, circuits.items.len);
+    defer allocator.free(counts);
+    for (0..circuits.items.len) |i| {
+        counts[i] = circuits.items[i].count();
+    }
+    std.sort.heap(usize, counts, {}, struct {
+        fn lessThan(context: void, a: usize, b: usize) bool {
+            _ = context;
+            return a > b; // Sort descending
+        }
+    }.lessThan);
+
+    for (counts) |count| {
+        try util.print("Circuit size: {d}\n", .{count});
+    }
+
+    try util.print("Last pair: a={d}, b={d}, dist={d}\n", .{ last_processed_pair.?.a, last_processed_pair.?.b, last_processed_pair.?.dist });
+    try util.print("Pair coordinates: ({d},{d}) -> ({d},{d})\n", .{ points[last_processed_pair.?.a].x, points[last_processed_pair.?.a].y, points[last_processed_pair.?.b].x, points[last_processed_pair.?.b].y });
+    return points[last_processed_pair.?.a].x * points[last_processed_pair.?.b].x;
 }
 const input =
     \\162,817,812
@@ -237,5 +282,5 @@ test "day08 part2" {
 
     const result = try part2(std.testing.allocator, lines);
     try util.print("Day 08 Part 2 result: {d}\n", .{result});
-    try std.testing.expectEqual(0, result);
+    try std.testing.expectEqual(25272, result);
 }
