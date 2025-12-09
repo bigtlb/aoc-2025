@@ -20,12 +20,12 @@ pub fn main() !void {
 }
 
 // parses the input file and returns a cleaner format
-fn parseInput(allocator: std.mem.Allocator, lines: []const []const u8) !void {
+fn parseInput(allocator: std.mem.Allocator, lines: [][]u8) !void {
     _ = allocator;
     _ = lines;
 }
 
-fn part1(allocator: std.mem.Allocator, lines: []const []const u8) !u64 {
+fn part1(allocator: std.mem.Allocator, lines: [][]u8) !u64 {
     try util.print("\n--- Day 02 Part 1 ---\n", .{});
     _ = allocator;
     _ = lines;
@@ -33,7 +33,7 @@ fn part1(allocator: std.mem.Allocator, lines: []const []const u8) !u64 {
     return 0;
 }
 
-fn part2(allocator: std.mem.Allocator, lines: [][]const u8) !u64 {
+fn part2(allocator: std.mem.Allocator, lines: [][]u8) !u64 {
     try util.print("\n--- Day 02 Part 2 ---\n", .{});
     _ = allocator;
     _ = lines;
@@ -55,7 +55,12 @@ const input =
 
 test "day02 part1" {
     const lines = try util.linesToSlice(std.testing.allocator, input);
-    defer std.testing.allocator.free(lines);
+    defer {
+        for (lines) |line| {
+            std.testing.allocator.free(line);
+        }
+        std.testing.allocator.free(lines);
+    }
 
     const result = try part1(std.testing.allocator, lines);
     try util.printColor(.blue, "Day 02 Part 1 result: {d}\n", .{result});
@@ -64,7 +69,12 @@ test "day02 part1" {
 
 test "day02 part2" {
     const lines = try util.linesToSlice(std.testing.allocator, input);
-    defer std.testing.allocator.free(lines);
+    defer {
+        for (lines) |line| {
+            std.testing.allocator.free(line);
+        }
+        std.testing.allocator.free(lines);
+    }
 
     const result = try part2(std.testing.allocator, lines);
     try util.print("Day 02 Part 2 result: {d}\n", .{result});
