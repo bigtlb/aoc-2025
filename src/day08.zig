@@ -161,7 +161,7 @@ fn part1(allocator: std.mem.Allocator, lines: [][]u8, n: usize) !usize {
     }
 
     for (shortest_distance_pairs) |pair| {
-        try util.print("Processing pair: a={d}, b={d}, dist={d}\n", .{ pair.a, pair.b, pair.dist });
+        // try util.print("Processing pair: a={d}, b={d}, dist={d}\n", .{ pair.a, pair.b, pair.dist });
         try addPairToCircuit(allocator, &circuits, pair);
     }
 
@@ -178,9 +178,9 @@ fn part1(allocator: std.mem.Allocator, lines: [][]u8, n: usize) !usize {
         }
     }.lessThan);
 
-    for (counts) |count| {
-        try util.print("Circuit size: {d}\n", .{count});
-    }
+    // for (counts) |count| {
+    //     try util.print("Circuit size: {d}\n", .{count});
+    // }
 
     // return the multiple of the top three counts
     return counts[0] * counts[1] * counts[2];
@@ -194,7 +194,8 @@ fn part2(allocator: std.mem.Allocator, lines: [][]u8) !i64 {
     const shortest_distance_pairs = try getDistancesToAllPairs(allocator, points);
     defer allocator.free(shortest_distance_pairs);
 
-    // An array of circuits. Each circuits contains points that are in the circuit, referenced by their index in the point array,
+    // An array of circuits. Each circuits contains points that are in the circuit,
+    // referenced by their index in the point array,
     // which is also how they are reference in the pairs
     var circuits = std.array_list.Managed(std.AutoHashMap(usize, void)).init(allocator);
     defer {
@@ -207,9 +208,9 @@ fn part2(allocator: std.mem.Allocator, lines: [][]u8) !i64 {
     var cur_idx: usize = 0;
     var last_processed_pair: ?Pair = null;
     while (circuits.items.len == 0 or circuits.items.len > 1 or (circuits.items.len == 1 and circuits.items[0].count() < points.len)) : (cur_idx += 1) {
-        var cur_pair = shortest_distance_pairs[cur_idx];
+        const cur_pair = shortest_distance_pairs[cur_idx];
         last_processed_pair = cur_pair;
-        try util.print("Processing pair: a={d}, b={d}, dist={d}\n", .{ cur_pair.a, cur_pair.b, cur_pair.dist });
+        // try util.print("Processing pair: a={d}, b={d}, dist={d}\n", .{ cur_pair.a, cur_pair.b, cur_pair.dist });
         try addPairToCircuit(allocator, &circuits, cur_pair);
     }
 
@@ -226,12 +227,12 @@ fn part2(allocator: std.mem.Allocator, lines: [][]u8) !i64 {
         }
     }.lessThan);
 
-    for (counts) |count| {
-        try util.print("Circuit size: {d}\n", .{count});
-    }
+    // for (counts) |count| {
+    //     try util.print("Circuit size: {d}\n", .{count});
+    // }
 
-    try util.print("Last pair: a={d}, b={d}, dist={d}\n", .{ last_processed_pair.?.a, last_processed_pair.?.b, last_processed_pair.?.dist });
-    try util.print("Pair coordinates: ({d},{d}) -> ({d},{d})\n", .{ points[last_processed_pair.?.a].x, points[last_processed_pair.?.a].y, points[last_processed_pair.?.b].x, points[last_processed_pair.?.b].y });
+    // try util.print("Last pair: a={d}, b={d}, dist={d}\n", .{ last_processed_pair.?.a, last_processed_pair.?.b, last_processed_pair.?.dist });
+    // try util.print("Pair coordinates: ({d},{d}) -> ({d},{d})\n", .{ points[last_processed_pair.?.a].x, points[last_processed_pair.?.a].y, points[last_processed_pair.?.b].x, points[last_processed_pair.?.b].y });
     return points[last_processed_pair.?.a].x * points[last_processed_pair.?.b].x;
 }
 const input =
