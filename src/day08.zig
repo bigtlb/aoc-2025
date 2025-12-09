@@ -88,7 +88,7 @@ fn getDistancesToAllPairs(allocator: std.mem.Allocator, points: []const Point) !
 }
 
 fn addPairToCircuit(allocator: std.mem.Allocator, circuits: *std.array_list.Managed(std.AutoHashMap(usize, void)), pair: Pair) !void {
-    // Scan the circuits to see// Find which circuit (if any) contains point a
+    // Scan the circuits to find which circuit (if any) contains point a and b
     var a_circuit: ?*std.AutoHashMap(usize, void) = null;
     var b_circuit: ?*std.AutoHashMap(usize, void) = null;
     var b_circuit_idx: ?usize = null;
@@ -100,7 +100,6 @@ fn addPairToCircuit(allocator: std.mem.Allocator, circuits: *std.array_list.Mana
         }
     }
 
-    // Find which circuit (if any) contains point b
     for (circuits.items, 0..) |*circuit, idx| {
         if (circuit.get(pair.b)) |_| {
             b_circuit = circuit;
@@ -112,6 +111,7 @@ fn addPairToCircuit(allocator: std.mem.Allocator, circuits: *std.array_list.Mana
     // If they are both in circuits, combine those circuits
     // If one is in a circuit but the other isn't, add it to that circuit
     // If neither is in a circuit, create a new circuit
+    // If they are both already in the same circuit do nothing
 
     if (a_circuit == null and b_circuit == null) {
         // try util.print("Creating new circuit with points {d} and {d}\n", .{ pair.a, pair.b });
