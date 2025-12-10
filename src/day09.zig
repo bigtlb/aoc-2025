@@ -13,6 +13,11 @@ const Point = struct {
     y: i64,
 };
 
+const Edge = struct {
+    a: Point,
+    b: Point,
+};
+
 pub fn main() !void {
     var gpa = std.heap.GeneralPurposeAllocator(.{}){};
     defer _ = gpa.deinit();
@@ -31,154 +36,64 @@ pub fn main() !void {
     try util.printColor(.green, "Part 2: {d}\n", .{try part2(allocator, lines)});
 }
 
-fn areCornersInside(points: []const Point, a: Point, b: Point) bool {
-    const corners = getRectangleCorners(a, b);
-
-    for (corners) |corner| {
-        if (!isPointInPolygon(corner, points)) {
-            return false;
-        }
-    }
-    return true;
-}
-
-fn getRectangleCorners(a: Point, b: Point) [4]Point {
+fn doesRectangleIntersect(edges: []const Edge, a: Point, b: Point) bool {
     const min_x = @min(a.x, b.x);
     const max_x = @max(a.x, b.x);
     const min_y = @min(a.y, b.y);
     const max_y = @max(a.y, b.y);
 
-    return [_]Point{
-        .{ .x = min_x, .y = min_y },
-        .{ .x = max_x, .y = min_y },
-        .{ .x = max_x, .y = max_y },
-        .{ .x = min_x, .y = max_y },
-    };
-}
+    for (edges) |edge| {
+        const edge_min_x = @min(edge.a.x, edge.b.x);
+        const edge_max_x = @max(edge.a.x, edge.b.x);
+        const edge_min_y = @min(edge.a.y, edge.b.y);
+        const edge_max_y = @max(edge.a.y, edge.b.y);
 
-fn doEdgesIntersect(rect_corners: [4]Point, polygon: []const Point) bool {
-    if (polygon.len < 3) return false;
-
-    // Check each rectangle edge against each polygon edge
-    var rect_i: usize = 0;
-    while (rect_i < 4) : (rect_i += 1) {
-        const rect_start = rect_corners[rect_i];
-        const rect_end = rect_corners[(rect_i + 1) % 4];
-
-        var poly_i: usize = 0;
-        while (poly_i < polygon.len) : (poly_i += 1) {
-            const poly_start = polygon[poly_i];
-            const poly_end = polygon[(poly_i + 1) % polygon.len];
-
-            // Skip if they share an endpoint (sharing edges is allowed)
-            if (rect_start.x == poly_start.x and rect_start.y == poly_start.y) continue;
-            if (rect_start.x == poly_end.x and rect_start.y == poly_end.y) continue;
-            if (rect_end.x == poly_start.x and rect_end.y == poly_start.y) continue;
-            if (rect_end.x == poly_end.x and rect_end.y == poly_end.y) continue;
-
-            if (doLineSegmentsIntersect(rect_start, rect_end, poly_start, poly_end)) {
-                return true;
-            }
-        }
-    }
-    return false;
-}
-
-fn doLineSegmentsIntersect(rectangle_start: Point, rectangle_end: Point, polygon_start: Point, polygon_end: Point) bool {
-    // Check if rectangle edge and polygon edge intersect
-    const counter_clockwise1 = ccw(rectangle_start, rectangle_end, polygon_start);
-    const counter_clockwise2 = ccw(rectangle_start, rectangle_end, polygon_end);
-    const counter_clockwise3 = ccw(polygon_start, polygon_end, rectangle_start);
-    const counter_clockwise4 = ccw(polygon_start, polygon_end, rectangle_end);
-
-    // General case
-    if (counter_clockwise1 * counter_clockwise2 < 0 and counter_clockwise3 * counter_clockwise4 < 0) {
-        return true;
-    }
-
-    // Special cases (collinear)
-    if (counter_clockwise1 == 0 and isPointOnLineSegment(polygon_start, rectangle_start, rectangle_end)) return true;
-    if (counter_clockwise2 == 0 and isPointOnLineSegment(polygon_end, rectangle_start, rectangle_end)) return true;
-    if (counter_clockwise3 == 0 and isPointOnLineSegment(rectangle_start, polygon_start, polygon_end)) return true;
-    if (counter_clockwise4 == 0 and isPointOnLineSegment(rectangle_end, polygon_start, polygon_end)) return true;
-
-    return false;
-}
-
-fn ccw(a: Point, b: Point, c: Point) i64 {
-    // Returns positive if counter-clockwise, negative if clockwise, 0 if collinear
-    return (b.x_coordinate - a.x_coordinate) * (c.y_coordinate - a.y_coordinate) - (b.y_coordinate - a.y_coordinate) * (c.x_coordinate - a.x_coordinate);
-}
-
-fn isPointOnLineSegment(point: Point, a: Point, b: Point) bool {
-    // Check if point lies on the line segment between a and b
-    const cross = (point.y - a.y) * (b.x - a.x) - (point.x - a.x) * (b.y - a.y);
-    if (cross != 0) return false; // Not collinear
-
-    const dot = (point.x - a.x) * (point.x - b.x) + (point.y - a.y) * (point.y - b.y);
-    if (dot > 0) return false; // Point is beyond the segment
-
-    const squared_length = (b.x - a.x) * (b.x - a.x) + (b.y - a.y) * (b.y - a.y);
-    if (dot + squared_length < 0) return false; // Point is before the segment
-
-    return true;
-}
-
-fn isPointInPolygon(point: Point, polygon: []const Point) bool {
-    if (polygon.len < 3) return false;
-
-    var inside = false;
-    var i: usize = 0;
-    const n = polygon.len;
-
-    while (i < n) : (i += 1) {
-        const j = (i + 1) % n;
-        const vi = polygon[i];
-        const vj = polygon[j];
-
-        // Check if point is on edge (sharing edges is allowed)
-        if (isPointOnLineSegment(point, vi, vj)) {
-            return true;
-        }
-
-        // Ray casting: cast horizontal ray to the right
-        if (((vi.y > point.y) != (vj.y > point.y)) and
-            (point.x < (vj.x - vi.x) * (point.y - vi.y) / (vj.y - vi.y) + vi.x))
+        // Exact Go logic: bounding box overlap test
+        if (min_x < edge_max_x and max_x > edge_min_x and
+            min_y < edge_max_y and max_y > edge_min_y)
         {
-            inside = !inside;
+            return true; // Intersection found
         }
     }
-
-    return inside;
-}
-
-fn isRectangleFullyContained(points: []const Point, a: Point, b: Point) bool {
-    // First check corners are inside
-    if (!areCornersInside(points, a, b)) return false;
-
-    // Then check no polygon edges intersect rectangle interior
-    const rect_corners = getRectangleCorners(a, b);
-    return !doEdgesIntersect(rect_corners, points);
+    return false; // No intersection
 }
 
 fn getLargestSquarePairs(points: []const Point, loopBounded: bool) !?Pair {
     const point_len = points.len;
     if (point_len < 2) return null;
 
+    // Convert polygon points to edges
+    var edges = std.array_list.Managed(Edge).init(std.heap.page_allocator);
+    defer edges.deinit();
+
+    var i: usize = 0;
+    while (i < points.len - 1) : (i += 1) {
+        try edges.append(.{ .a = points[i], .b = points[i + 1] });
+    }
+    // Close the polygon
+    try edges.append(.{ .a = points[points.len - 1], .b = points[0] });
+
     var largest_pair: ?Pair = null;
     var largest_square: u64 = 0;
 
-    var i: usize = 0;
-    while (i < point_len) : (i += 1) {
-        var j: usize = i + 1;
-        while (j < point_len) : (j += 1) {
-            const square = @abs(points[i].x - points[j].x + 1) * @abs(points[i].y - points[j].y + 1);
+    var from_idx: usize = 0;
+    while (from_idx < point_len) : (from_idx += 1) {
+        var to_idx: usize = from_idx;
+        while (to_idx < point_len) : (to_idx += 1) {
+            const from_point = points[from_idx];
+            const to_point = points[to_idx];
+
+            const square = (@abs(from_point.x - to_point.x) + 1) * (@abs(from_point.y - to_point.y) + 1);
+
             if (square > largest_square and
                 (loopBounded == false or
-                    isRectangleFullyContained(points, points[i], points[j])))
+                    doesRectangleIntersect(edges.items, from_point, to_point) == false))
             {
+                if (loopBounded) {
+                    // try util.print("Found larger square {d} at points {} and {}\n", .{ square, from_point, to_point });
+                }
                 largest_square = square;
-                largest_pair = .{ .a = i, .b = j, .square = square };
+                largest_pair = .{ .a = from_idx, .b = to_idx, .square = square };
             }
         }
     }
@@ -197,6 +112,8 @@ fn makePoints(allocator: std.mem.Allocator, lines: [][]u8) ![]Point {
         try point_list.append(.{ .x = x, .y = y });
     }
 
+    // try util.print("Made point list with {d} points.\n", .{point_list.items.len});
+    // try util.print("Which means there will be {d} pairs to test.\n", .{(point_list.items.len * (point_list.items.len - 1)) / 2});
     return point_list.toOwnedSlice();
 }
 
@@ -207,10 +124,10 @@ fn part1(allocator: std.mem.Allocator, lines: [][]u8) !u64 {
 
     var largest_pair = try getLargestSquarePairs(points, false);
 
-    const a = largest_pair.?.a;
-    const b = largest_pair.?.b;
-    const square: u64 = largest_pair.?.square;
-    try util.print("Largest pair: a={}, b={}, square={d}\n", .{ points[a], points[b], square });
+    // const a = largest_pair.?.a;
+    // const b = largest_pair.?.b;
+    // const square: u64 = largest_pair.?.square;
+    // try util.print("Largest pair: a={}, b={}, square={d}\n", .{ points[a], points[b], square });
     return largest_pair.?.square;
 }
 
@@ -221,10 +138,10 @@ fn part2(allocator: std.mem.Allocator, lines: [][]u8) !u64 {
 
     var largest_pair = try getLargestSquarePairs(points, true);
 
-    const a = largest_pair.?.a;
-    const b = largest_pair.?.b;
-    const square: u64 = largest_pair.?.square;
-    try util.print("Largest pair: a={}, b={}, square={d}\n", .{ points[a], points[b], square });
+    // const a = largest_pair.?.a;
+    // const b = largest_pair.?.b;
+    // const square: u64 = largest_pair.?.square;
+    // try util.print("Largest pair: a={}, b={}, square={d}\n", .{ points[a], points[b], square });
     return largest_pair.?.square;
 }
 
@@ -249,7 +166,7 @@ test "day09 part1" {
     }
 
     const result = try part1(std.testing.allocator, lines);
-    try util.printColor(.blue, "Day 09 Part 1 result: {d}\n", .{result});
+    // try util.printColor(.blue, "Day 09 Part 1 result: {d}\n", .{result});
     try std.testing.expectEqual(50, result);
 }
 
@@ -264,5 +181,5 @@ test "day09 part2" {
 
     const result = try part2(std.testing.allocator, lines);
     try util.print("Day 09 Part 2 result: {d}\n", .{result});
-    try std.testing.expectEqual(0, result);
+    try std.testing.expectEqual(24, result);
 }
